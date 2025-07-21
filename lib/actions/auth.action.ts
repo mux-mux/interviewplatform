@@ -1,6 +1,9 @@
 'use server';
 
-import { db } from '@/firebase/admin';
+import { auth, db } from '@/firebase/admin';
+import { cookies } from 'next/headers';
+
+const EXPIRES_IN_WEEK = 60 * 60 * 24 * 7;
 
 export async function signUp(params: SignUpParams) {
   const { uid, name, email } = params;
@@ -34,6 +37,22 @@ export async function signUp(params: SignUpParams) {
       message: 'Failed to create an account',
     };
   }
+}
+
+export async function setSessionCookie(idToken: string) {
+  const cookieStore = await cookies();
+
+  const sessionCookie = await auth.createSessionCookie(idToken, {
+    expiresIn: EXPIRES_IN_WEEK * 1000,
+  });
+
+  cookieStore.set('session', sessionCookie, {
+    maxAge: EXPIRES_IN_WEEK,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    sameSite: 'lax',
+  });
 }
 
 function isAuthError(error: unknown): error is { code: string } {
