@@ -120,7 +120,7 @@ export async function isAuthenticated() {
   return !!user;
 }
 
-export async function getInterviewByUserId(
+export async function getInterviewsByUserId(
   userId: string
 ): Promise<Interview[] | null> {
   const interviews = await db
