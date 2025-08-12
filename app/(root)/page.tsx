@@ -1,18 +1,23 @@
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
-import { dummyInterviews } from '@/constants';
 import InterviewCard from '@/components/InterviewCard';
 import {
   getCurrentUser,
   getInterviewsByUserId,
+  getLatestInterviews,
 } from '@/lib/actions/auth.action';
 
 const Page = async () => {
   const user = await getCurrentUser();
-  const userInterviews = user?.id ? await getInterviewsByUserId(user.id) : [];
+
+  const [userInterviews, latestInterviews] = await Promise.all([
+    user?.id ? getInterviewsByUserId(user.id) : Promise.resolve([]),
+    user?.id ? getLatestInterviews({ userId: user.id }) : Promise.resolve([]),
+  ]);
 
   const hasPastInterviews = (userInterviews?.length ?? 0) > 0;
+  const hasUpcomingInterviews = (latestInterviews?.length ?? 0) > 0;
 
   return (
     <>
@@ -49,9 +54,13 @@ const Page = async () => {
       <section className="flex flex-col gap-6 mt-8 card-cta">
         <h2>Take an Inreview</h2>
         <div className="interviews-section">
-          {dummyInterviews.map((interview) => (
-            <InterviewCard {...interview} key={interview.id} />
-          ))}
+          {hasUpcomingInterviews ? (
+            latestInterviews?.map((interview) => (
+              <InterviewCard {...interview} key={interview.id} />
+            ))
+          ) : (
+            <p>There are no new interviews available</p>
+          )}
         </div>
       </section>
     </>
